@@ -1,6 +1,7 @@
 language: go
 script:
-  - GOOS=linux  go build -o tg-webhook-emulator
+  - GOOS=linux go build -o tg-webhook-emulator
+  - GOOS=linux CGO_ENABLED=0 GOARCH=arm go build -o tg-webhook-emulator-arm
   - GOOS=darwin go build -o tg-webhook-emulator-mac
 deploy:
   provider: releases
@@ -10,6 +11,7 @@ deploy:
   file:
     - tg-webhook-emulator
     - tg-webhook-emulator-mac
+    - tg-webhook-emulator-arm
   on:
     repo: m-messiah/tg-webhook-emulator
     tags: true
