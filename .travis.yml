@@ -1,0 +1,15 @@
+language: go
+script:
+  - GOOS=linux  go build -o tg-webhook-emulator
+  - GOOS=darwin go build -o tg-webhook-emulator-mac
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: kquohEfkvBNBjaqiZktpptsBgCwOapC+12DYfnAiMOd/96LPygJnK3toEJg08wcX8IHrL5Hv698lRunIZqMGQaZndJM5NRNUHMWDHhQfvo9Ez//LKad8eumUJik4cJWTki3khyWPjGb5bOklNsJ0bIqeg5iA3yNeGtIq0hjgFO5MqUK2klGl6DRfCzZrh7SRy5LY38mOstJhj87CpyFpjt+LABvf0yrEHjH1RapBHDVeR70FwfYtpvl/Ap4Jqlex4yg/H7vsaIOyl6esMIfwETYJVcp8QkD6y7T2cMI5YIi9IWqyKgE40ZY35Zxip2EsSHE+m6tL4YFn0IsVSVNEC23j6WitIX7z1VcN4Ts5eQq5ec3C0p2i/W2dlaJvwF9iHVpqG1eNuhVIJBZQ154EWyygdYMx2zG8hV+CW9RQVW5EiIQJV/G6oejQLVkwtki2woVslQWF3u8/pGnkAizsLv4D/w6jslNaqX4sXgjwZbblSNcR2cdh2c31pbnBlNt4Zw1tX5GvOBzobgqnAXQh7En8Ji0EY5VBnNfGy4nnhg3PEsYDpM8WlEc6ay0eFmb/PXL04uU7tlzEt1l3tHcwMaN+fgkxdXRh4ua7OaKP2CeGerNAFmGPqcri55BMydcqz+XIJtdrnnObHSiS3rPSwz6w6iE+RDHZyYj/RM3X+mE=
+  file:
+    - tg-webhook-emulator
+    - tg-webhook-emulator-mac
+  on:
+    repo: m-messiah/tg-webhook-emulator
+    tags: true
