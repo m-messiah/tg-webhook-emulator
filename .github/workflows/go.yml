@@ -1,0 +1,34 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+
+      - name: Build
+        run: go build -o tg-webhook-emulator -v ./...
+
+      - name: Build release files
+        if: ${{ github.ref == 'refs/heads/main' }} || startsWith(github.ref, 'refs/tags/')
+        run: |
+          GOOS=linux GOARCH=amd64             go build -o tg-webhook-emulator
+          GOOS=linux CGO_ENABLED=0 GOARCH=arm go build -o tg-webhook-emulator-arm
+          GOOS=darwin                         go build -o tg-webhook-emulator-mac
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: tg-webhook-emulator*

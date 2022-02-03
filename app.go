@@ -4,49 +4,42 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
-	"strconv"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	log "github.com/sirupsen/logrus"
 )
 
-func parseWebhookAnswer(resp *http.Response) (string, url.Values) {
-	v := url.Values{}
+func parseWebhookAnswer(resp *http.Response) (string, tgbotapi.Params) {
 	var method string
-	for i := 0; i < 3; i++ {
-		if i == 0 {
-			var parsed map[string]interface{}
-			bytes, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				continue
-			}
-			err = json.Unmarshal(bytes, &parsed)
-			if err != nil {
-				continue
-			}
-			for key, value := range parsed {
-				if key == "method" {
-					method = value.(string)
-				} else {
-					switch value.(type) {
-					case int64:
-						v.Add(key, strconv.FormatInt(value.(int64), 10))
-					case float64:
-						v.Add(key, strconv.FormatFloat(value.(float64), 'f', 0, 64))
-					case string:
-						v.Add(key, value.(string))
-					}
-				}
-			}
-			return method, v
+	params := make(tgbotapi.Params)
+
+	var parsed map[string]interface{}
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return method, params
+	}
+	err = json.Unmarshal(respBytes, &parsed)
+	if err != nil {
+		return method, params
+	}
+	for key, value := range parsed {
+		if key == "method" {
+			method = value.(string)
 		} else {
-			// Implement other values methods here
+			switch value := value.(type) {
+			case int64:
+				params.AddNonZero64(key, value)
+			case float64:
+				params.AddNonZeroFloat(key, value)
+			case string:
+				params.AddNonEmpty(key, value)
+			}
 		}
 	}
-	return method, v
+	return method, params
 }
 
 func main() {
@@ -67,7 +60,7 @@ func main() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	updates, err := bot.GetUpdatesChan(u)
+	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
 		jsonValue, _ := json.Marshal(update)
@@ -77,10 +70,10 @@ func main() {
 			continue
 		}
 		method, params := parseWebhookAnswer(resp)
-		_, err = bot.MakeRequest(method, params)
+		apiResp, err := bot.MakeRequest(method, params)
 
 		if err != nil {
-			log.Error(err)
+			log.Errorf("error: %s, resp: %s", err, apiResp.Result)
 			continue
 		}
 	}
