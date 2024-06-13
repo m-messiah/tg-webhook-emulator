@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 
@@ -17,7 +17,7 @@ func parseWebhookAnswer(resp *http.Response) (string, tgbotapi.Params) {
 	params := make(tgbotapi.Params)
 
 	var parsed map[string]interface{}
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return method, params
 	}
@@ -73,7 +73,11 @@ func main() {
 		apiResp, err := bot.MakeRequest(method, params)
 
 		if err != nil {
-			log.Errorf("error: %s, resp: %s", err, apiResp.Result)
+			if apiResp != nil {
+				log.Errorf("error: %s, resp: %s", err, apiResp.Result)
+			} else {
+				log.Error(err)
+			}
 			continue
 		}
 	}
